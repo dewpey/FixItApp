@@ -10,10 +10,13 @@ var bodyParser = require('body-parser');
 var server = net.createServer(function (socket) {
     socket.write('Intel Depth Camera has connected\r\n');
     socket.on('data', function (data) {
-        current = processString(data);
+        current = processString(data.toString());
         console.log(data.toString())
-        socket.write(data);
-        processString(data);
+        calculateAngle();
+        socket.write({
+            data: data,
+            angle: currentAngle
+        });
     });
     socket.on('error', function (e) {
         console.log(e)
@@ -37,21 +40,17 @@ function processString(input) {
 }
 
 function calculateAngle() {
+
     const side = Math.sqrt(
-        this.state.calibration[8].x * this.state.calibration[8].x +
-        this.state.calibration[8].y * this.state.calibration[8].y
-    );
+        (calibration[10].x - calibration[8].x) * (calibration[10].x - calibration[8].x) + (calibration[10].y - calibration[8].x) * (calibration[10].y * calibration[8].y));
 
     const hypo = Math.sqrt(
-        this.state.current[8].x * this.state.current[8].x +
-        this.state.current[8].y * this.state.current[8].y
-    );
+        (current[10].x - current[8].x) * (current[10].x - current[8].x) + (current[10].y - current[8].x) * (current[10].y * current[8].y));
 
     console.log(hypo);
 
-    const theta = Math.acos(side / hypo);
-
-    console.log(theta);
+    currentAngle = Math.acos(side / hypo);
+    console.log(currentAngle);
 }
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -67,9 +66,10 @@ var port = process.env.PORT || 8080; // set our port
 var router = express.Router(); // get an instance of the express Router
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
-router.get('/', function (req, res) {
+router.get('/calibrate', function (req, res) {
+    calibration = current
     res.json({
-        message: 'hooray! welcome to our api!'
+        message: 'hooray!'
     });
 });
 
