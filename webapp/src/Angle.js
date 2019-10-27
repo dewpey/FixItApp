@@ -82,7 +82,7 @@ export default class Angle extends React.Component {
         !this.state.isComplete &&
         this.state.remaining > 0 ? (
           <Container>
-            <h1>Angle Goal: 45%</h1>
+            <h1>Angle Goal: 55%</h1>
             <h2>Current Angle: {this.state.angle}°</h2>
             <h2>Remaining: {this.state.remaining}</h2>
             <iframe width="853" height="480" src="https://www.youtube.com/embed/6b1hu6iSqok" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
