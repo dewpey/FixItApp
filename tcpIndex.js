@@ -13,10 +13,10 @@ var server = net.createServer(function (socket) {
         current = processString(data.toString());
         console.log(data.toString())
         calculateAngle();
-        socket.write({
+        socket.write(JSON.stringify({
             data: data,
             angle: currentAngle
-        });
+        }));
     });
     socket.on('error', function (e) {
         console.log(e)
@@ -40,17 +40,18 @@ function processString(input) {
 }
 
 function calculateAngle() {
+    if(calibration.length > 0){
+        const side = Math.sqrt(
+            (calibration[10].x - calibration[8].x) * (calibration[10].x - calibration[8].x) + (calibration[10].y - calibration[8].x) * (calibration[10].y * calibration[8].y));
 
-    const side = Math.sqrt(
-        (calibration[10].x - calibration[8].x) * (calibration[10].x - calibration[8].x) + (calibration[10].y - calibration[8].x) * (calibration[10].y * calibration[8].y));
+        const hypo = Math.sqrt(
+            (current[10].x - current[8].x) * (current[10].x - current[8].x) + (current[10].y - current[8].x) * (current[10].y * current[8].y));
 
-    const hypo = Math.sqrt(
-        (current[10].x - current[8].x) * (current[10].x - current[8].x) + (current[10].y - current[8].x) * (current[10].y * current[8].y));
+        console.log(hypo);
 
-    console.log(hypo);
-
-    currentAngle = Math.acos(side / hypo);
-    console.log(currentAngle);
+        currentAngle = Math.acos(side / hypo);
+        console.log(currentAngle);
+    }
 }
 // configure app to use bodyParser()
 // this will let us get the data from a POST
