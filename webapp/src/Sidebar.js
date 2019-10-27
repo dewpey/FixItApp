@@ -13,7 +13,8 @@ export default class Sidebar extends React.Component {
     return (
       <div width="500px" style={{ flex: 1, flexDirection: "row" }}>
         <Container>
-          <h2>Exercises</h2>
+          <h1>Pythagoras</h1>
+          <h2>Drew's Physical Therapy</h2>
           <Excercise>3x Leg Raises</Excercise>
         </Container>
       </div>

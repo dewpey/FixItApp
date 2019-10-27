@@ -1,5 +1,6 @@
 var net = require('net');
-
+var http = require('http');
+var WebSocketServer = require('websocket').server;
 var rCur = [{x:-1, y:-1},{x:-1, y:-1},{x:-1, y:-1}]
 var rCal = [{x:-1, y:-1},{x:-1, y:-1},{x:-1, y:-1}]
 var currentAngle = 0.0;
@@ -7,7 +8,21 @@ var express = require('express'); // call express
 var app = express(); // define our app using express
 var bodyParser = require('body-parser');
 var calibrated = false;
+var remaining = 3;
+var goalAngle = 60.0;
+var awaiting0 = false;
+var cors = require('cors')
+app.use(cors())
+const io = require('socket.io')();
 
+io.on('connection', (client) => {
+    client.on('subscribeToTimer', (interval) => {
+      console.log('client is subscribing to timer with interval ', interval);
+      setInterval(() => {
+        client.emit('info', {angle: currentAngle, remaining: remaining});
+      }, interval);
+    });
+  });
 
 var server = net.createServer(function (socket) {
     socket.write('Intel Depth Camera has connected\r\n');
@@ -24,12 +39,14 @@ var server = net.createServer(function (socket) {
         console.log(rCur)
         console.log("calibrated")
         console.log(rCal)
+        
         /*
-        socket.write(JSON.stringify({
+        server.send(JSON.stringify({
             data: data,
             angle: currentAngle
         }));
         */
+        
     });
     socket.on('error', function (e) {
         console.log(e)
@@ -59,7 +76,18 @@ function calculateAngle() {
         const hypo = Math.sqrt(
             (rCur[0].x - rCur[2].x) * (rCur[0].x - rCur[2].x) + (rCur[0].y - rCur[2].y) * (rCur[0].y - rCur[2].y));
 
-        currentAngle = 180/3.14*Math.acos(side / hypo);
+
+        const newAngle = 180/3.14*Math.acos(side / hypo);
+        if(newAngle){
+            currentAngle = newAngle
+            if (currentAngle > goalAngle && !awaiting0){
+                remaining--;
+                awaiting0 = true
+            }
+            if (currentAngle < 15.0){
+                awaiting0 = false
+            }
+        } 
         console.log(currentAngle);
 
     }
@@ -101,3 +129,7 @@ console.log('Magic happens on port ' + port);
 
 server.listen(5000, '127.0.0.1');
 console.log("Websocket is listening");
+
+const port1 = 3005;
+io.listen(port1);
+console.log('listening on port ', port1);

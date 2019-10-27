@@ -10,9 +10,6 @@ function App() {
       <header className="App-header">
         <Grid direction="row" style={{ height: "100vh" }}>
           <Grid item>
-            <Sidebar />
-          </Grid>
-          <Grid item>
             <Angle />
           </Grid>
         </Grid>
