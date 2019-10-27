@@ -1,13 +1,7 @@
 import React from "react";
-const webSocketsServerPort = 8000;
-const webSocketServer = require("websocket").server;
-const http = require("http");
-// Spinning the http server and the websocket server.
-const server = http.createServer();
-server.listen(webSocketsServerPort);
-const wsServer = new webSocketServer({
-  httpServer: server
-});
+var net = require("net");
+
+server.listen(5000, "127.0.0.1");
 
 export default class Details extends React.Component {
   constructor(props) {
@@ -24,6 +18,19 @@ export default class Details extends React.Component {
   handleClick() {
     const results = this.processString(this.state.input);
     this.setState({ current: results });
+  }
+
+  initServer() {
+    const server = net.createServer(function(socket) {
+      socket.write("Intel Depth Camera has connected\r\n");
+      socket.on("data", function(data) {
+        console.log(data.toString());
+      });
+      socket.on("error", function(e) {
+        console.log(e);
+      });
+      socket.pipe(socket);
+    });
   }
 
   processString(input) {
