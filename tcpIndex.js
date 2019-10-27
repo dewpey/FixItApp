@@ -9,11 +9,16 @@ var app = express(); // define our app using express
 var bodyParser = require('body-parser');
 var calibrated = false;
 var remaining = 3;
-var goalAngle = 60.0;
+var goalAngle = 45.0;
 var awaiting0 = false;
+let AWS = require('aws-sdk');
+
+AWS.config.update({region: 'us-west-2'})
+const ses = new AWS.SES();
 var cors = require('cors')
 app.use(cors())
 const io = require('socket.io')();
+
 
 io.on('connection', (client) => {
     client.on('subscribeToTimer', (interval) => {
@@ -84,6 +89,9 @@ function calculateAngle() {
                 remaining--;
                 awaiting0 = true
             }
+            if(remaining == 0){
+                sendEmail()
+            }
             if (currentAngle < 15.0){
                 awaiting0 = false
             }
@@ -115,6 +123,28 @@ router.get('/calibrate', function (req, res) {
         message: 'hooray!'
     });
 });
+
+async function sendEmail(){
+    return await ses.sendTemplatedEmail({
+        Destination: {
+            ToAddresses: ['drew1patel@gmail.com'],
+            CcAddresses: [],
+            BccAddresses: []
+        },
+        Source: 'drew1patel@gmail.com',
+        Template: 'pythag-20191027054423',
+        TemplateData: '{}' /* required */
+    }, function (err, data) {
+        if (err){ 
+            console.log(err, err.stack);
+            
+         } // an error occurred
+        else{
+             console.log(data);  
+            
+        }         // successful response
+    });
+}
 
 // more routes for our API will happen here
 
