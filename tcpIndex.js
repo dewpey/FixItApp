@@ -12,7 +12,7 @@ var remaining = 3;
 var goalAngle = 45.0;
 var awaiting0 = false;
 let AWS = require('aws-sdk');
-
+var emailsent = false;
 AWS.config.update({region: 'us-west-2'})
 const ses = new AWS.SES();
 var cors = require('cors')
@@ -89,8 +89,9 @@ function calculateAngle() {
                 remaining--;
                 awaiting0 = true
             }
-            if(remaining == 0){
+            if(remaining == 0 && !emailsent){
                 sendEmail()
+                emailsent = true
             }
             if (currentAngle < 15.0){
                 awaiting0 = false
