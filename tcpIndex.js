@@ -1,22 +1,35 @@
 var net = require('net');
 
-var current = []
-var calibration = []
+var rCur = [{x:-1, y:-1},{x:-1, y:-1},{x:-1, y:-1}]
+var rCal = [{x:-1, y:-1},{x:-1, y:-1},{x:-1, y:-1}]
 var currentAngle = 0.0;
 var express = require('express'); // call express
 var app = express(); // define our app using express
 var bodyParser = require('body-parser');
+var calibrated = false;
+
 
 var server = net.createServer(function (socket) {
     socket.write('Intel Depth Camera has connected\r\n');
     socket.on('data', function (data) {
-        current = processString(data.toString());
-        console.log(data.toString())
+        const results = processString(data.toString());
+        if(results[9].x > 1){
+            console.log(results[8])
+            rCur[0] = results[11]
+            rCur[1] = results[12]
+            rCur[2] = results[13]
+        }
         calculateAngle();
+        console.log("current")
+        console.log(rCur)
+        console.log("calibrated")
+        console.log(rCal)
+        /*
         socket.write(JSON.stringify({
             data: data,
             angle: currentAngle
         }));
+        */
     });
     socket.on('error', function (e) {
         console.log(e)
@@ -27,7 +40,6 @@ var server = net.createServer(function (socket) {
 
 function processString(input) {
     const items = input.match(/^\d+|\d+\b|\d+(?=\w)/g);
-    console.log(items);
     var newArray = [items.length - 1];
     var i;
     for (i = 0; i < items.length - 1; i += 2) {
@@ -40,17 +52,16 @@ function processString(input) {
 }
 
 function calculateAngle() {
-    if(calibration.length > 0){
+    if(calibrated){
         const side = Math.sqrt(
-            (calibration[10].x - calibration[8].x) * (calibration[10].x - calibration[8].x) + (calibration[10].y - calibration[8].x) * (calibration[10].y * calibration[8].y));
+            (rCal[0].x - rCal[2].x) * (rCal[0].x - rCal[2].x) + (rCal[0].y - rCal[2].y) * (rCal[0].y - rCal[2].y));
 
         const hypo = Math.sqrt(
-            (current[10].x - current[8].x) * (current[10].x - current[8].x) + (current[10].y - current[8].x) * (current[10].y * current[8].y));
+            (rCur[0].x - rCur[2].x) * (rCur[0].x - rCur[2].x) + (rCur[0].y - rCur[2].y) * (rCur[0].y - rCur[2].y));
 
-        console.log(hypo);
-
-        currentAngle = Math.acos(side / hypo);
+        currentAngle = 180/3.14*Math.acos(side / hypo);
         console.log(currentAngle);
+
     }
 }
 // configure app to use bodyParser()
@@ -68,7 +79,10 @@ var router = express.Router(); // get an instance of the express Router
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 router.get('/calibrate', function (req, res) {
-    calibration = current
+    rCal[0] = rCur[0]
+    rCal[1] = rCur[1]
+    rCal[2] = rCur[2]
+    calibrated = true
     res.json({
         message: 'hooray!'
     });
